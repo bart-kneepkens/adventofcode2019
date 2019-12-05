@@ -68,7 +68,7 @@ func stepThroughLine(path: [String], onEveryStep closure: ((GridPoint) -> Void))
     }
 }
 
-func findClosestIntersectionForLines(_ firstLine: [String], _ secondLine: [String]) -> GridPoint? {
+func findIntersectionsForLines(_ firstLine: [String], _ secondLine: [String]) -> [GridPoint] {
     var firstLineGridPoints = Set<GridPoint>()
     
     stepThroughLine(path: firstLine) { point in
@@ -83,7 +83,7 @@ func findClosestIntersectionForLines(_ firstLine: [String], _ secondLine: [Strin
         }
     }
     
-    return intersections.sorted { manhattanDistance(from: $0) < manhattanDistance(from: $1)}.first
+    return intersections
 }
 
 func manhattanDistance(from GridPoint: GridPoint) -> Int {
@@ -91,16 +91,60 @@ func manhattanDistance(from GridPoint: GridPoint) -> Int {
 }
 
 func findManhattanDistanceForClosestIntersectionInLines(_ firstLine: [String], _ secondLine: [String]) -> Int {
-    guard let closestIntersection = findClosestIntersectionForLines(firstLine, secondLine) else { return 0 }
+    let intersections = findIntersectionsForLines(firstLine, secondLine)
+    let sortedIntersections = intersections.sorted { manhattanDistance(from: $0) < manhattanDistance(from: $1)}
+    guard let closestIntersection = sortedIntersections.first else { return 0 }
     return manhattanDistance(from: closestIntersection)
 }
 
-// Example test cases
-assert(findClosestIntersectionForLines(["R8","U5","L5","D3"], ["U7","R6","D4","L4"]) == GridPoint(x: 3, y:3))
+// Example test cases Part 1
 assert(findManhattanDistanceForClosestIntersectionInLines(["R8","U5","L5","D3"], ["U7","R6","D4","L4"]) == 6)
 assert(findManhattanDistanceForClosestIntersectionInLines(["R75","D30","R83","U83","L12","D49","R71","U7","L72"], ["U62","R66","U55","R34","D71","R55","D58","R83"]) == 159)
 assert(findManhattanDistanceForClosestIntersectionInLines(["R98","U47","R26","D63","R33","U87","L62","D20","R33","U53","R51"], ["U98","R91","D20","R16","D67","R40","U7","R15","U6","R7"]) == 135)
 
 assert(findManhattanDistanceForClosestIntersectionInLines(firstInputLineInstructions, secondInputLineInstructions) == 399)
 
-print("All test cases succesful")
+print("All part 1 test cases succesful")
+
+func calculateStepsForLine(_ line: [String], to intersection: GridPoint) -> Int {
+    var steps = 0
+    var intersectionFound = false
+
+    stepThroughLine(path: line) { point in
+        if (!intersectionFound) {
+            steps += 1
+        }
+
+        if (point == intersection) {
+            intersectionFound = true
+        }
+    }
+
+    return steps
+}
+
+func findStepsToClosestIntersectionInLines(_ firstLine: [String], _ secondLine: [String]) -> Int {
+    let intersections = findIntersectionsForLines(firstLine, secondLine)
+    
+    var shortestDistance = 0
+    
+    for intersection in intersections {
+        let firstLineDistance = calculateStepsForLine(firstLine, to: intersection)
+        let secondLineDistance = calculateStepsForLine(secondLine, to: intersection)
+        let total = firstLineDistance + secondLineDistance
+        if (shortestDistance == 0 || shortestDistance > total) {
+            shortestDistance = total
+        }
+    }
+    
+    return shortestDistance
+}
+ 
+// Part 2 testcases
+assert(findStepsToClosestIntersectionInLines(["R8","U5","L5","D3"], ["U7","R6","D4","L4"]) == 30)
+assert(findStepsToClosestIntersectionInLines(["R75","D30","R83","U83","L12","D49","R71","U7","L72"], ["U62","R66","U55","R34","D71","R55","D58","R83"]) == 610)
+assert(findStepsToClosestIntersectionInLines(["R98","U47","R26","D63","R33","U87","L62","D20","R33","U53","R51"], ["U98","R91","D20","R16","D67","R40","U7","R15","U6","R7"]) == 410)
+
+assert(findStepsToClosestIntersectionInLines(firstInputLineInstructions, secondInputLineInstructions) == 15678)
+
+print("All part 2 test cases succesful")
