@@ -18,27 +18,26 @@
  */
 
 func meetsCriteria(password: Int) -> Bool {
-    
-    var pw: [Int] = []
+    var passwordDigits: [Int] = []
     var x = password
 
     while(x > 0) {
-        pw.append(x % 10)
+        passwordDigits.append(x % 10)
         x = x / 10
     }
+    passwordDigits.reverse()
     
-
-    // is a six digit number
-    let isSixDigits = pw.count == 6
+    // Is a six digit number
+    let isSixDigits = passwordDigits.count == 6
 
     // Two adjacent digets are the same
-    let uniqueDigits = Set<Int>(pw)
+    let uniqueDigits = Set<Int>(passwordDigits)
     let hasTwoAdjacentDigits = uniqueDigits.count < 6
     
     // Digits never decrease
     var digitsNeverDecrease = false
     var previous = 0
-    for digit in pw {
+    for digit in passwordDigits{
         if (digit < previous) {
             digitsNeverDecrease = true
         } else {
@@ -61,8 +60,16 @@ func findAmountOfPasswordsWithinRange(_ lowerbounds: Int, _ upperbounds: Int) ->
     return amount
 }
 
-print(meetsCriteria(password: 111111))
-print(!meetsCriteria(password: 223450))
-print(!meetsCriteria(password: 123789))
+assert(meetsCriteria(password: 111111))
+assert(!meetsCriteria(password: 223450))
+assert(!meetsCriteria(password: 123789))
 
-print(findAmountOfPasswordsWithinRange(347312, 805915))
+print("Part 1 answer:", findAmountOfPasswordsWithinRange(347312, 805915)) // 594
+
+
+//print(meetsCriteria(password: 123444))
+//print(meetsCriteria(password: 111122))
+//print(meetsCriteria(password: 112233))
+
+
+
