@@ -17,8 +17,52 @@
  How many different passwords within the range given in your puzzle input meet these criteria?
  */
 
-
 func meetsCriteria(password: Int) -> Bool {
     
-    return false
+    var pw: [Int] = []
+    var x = password
+
+    while(x > 0) {
+        pw.append(x % 10)
+        x = x / 10
+    }
+    
+
+    // is a six digit number
+    let isSixDigits = pw.count == 6
+
+    // Two adjacent digets are the same
+    let uniqueDigits = Set<Int>(pw)
+    let hasTwoAdjacentDigits = uniqueDigits.count < 6
+    
+    // Digits never decrease
+    var digitsNeverDecrease = false
+    var previous = 0
+    for digit in pw {
+        if (digit < previous) {
+            digitsNeverDecrease = true
+        } else {
+            previous = digit
+        }
+    }
+
+    return isSixDigits && hasTwoAdjacentDigits && !digitsNeverDecrease
 }
+
+func findAmountOfPasswordsWithinRange(_ lowerbounds: Int, _ upperbounds: Int) -> Int {
+    var amount = 0
+    
+    for i in lowerbounds..<upperbounds {
+        if(meetsCriteria(password: i)) {
+            amount += 1
+        }
+    }
+    
+    return amount
+}
+
+print(meetsCriteria(password: 111111))
+print(!meetsCriteria(password: 223450))
+print(!meetsCriteria(password: 123789))
+
+print(findAmountOfPasswordsWithinRange(347312, 805915))
