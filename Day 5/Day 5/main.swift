@@ -7,80 +7,6 @@ let puzzleInput =
 
 let input = puzzleInput.components(separatedBy: ",").compactMap({ Int($0) })
 
-
-let ADDITION = 1
-let MULTIPLICATION = 2
-
-let INPUT = 3
-let OUTPUT = 4
-
-// From Day 3
-func runProgram(code: [Int], instructionIndex: Int = 0) -> [Int] {
-    var codeCopy = code
-    
-    let instruction = extractInstructionOpcode(code[instructionIndex])
-    let parameterModes = extractInstructionParameterModes(code[instructionIndex])
-    
-    let firstParameterMode = parameterModes.count > 0 ? parameterModes[0] : 0
-    let secondParameterMode = parameterModes.count > 1 ? parameterModes[1] : 0
-    let thirdParameterMode = parameterModes.count > 2 ? parameterModes[2] : 0
-    
-    guard instruction != 99 else { return codeCopy }
-    
-    var newIndex = 0
-    
-    switch instruction {
-    case ADDITION:
-        let firstParameter = codeCopy[instructionIndex + 1]
-        let secondParameter = codeCopy[instructionIndex + 2]
-        let thirdParameter = codeCopy[instructionIndex + 3]
-        
-        let first = firstParameterMode == 0 ? codeCopy[firstParameter] : firstParameter
-        let second = secondParameterMode == 0 ? codeCopy[secondParameter] : secondParameter
-        
-        let sum = first + second
-        codeCopy[thirdParameter] = sum
-        newIndex = instructionIndex + 4
-        break
-    case MULTIPLICATION:
-       let firstParameter = codeCopy[instructionIndex + 1]
-       let secondParameter = codeCopy[instructionIndex + 2]
-       let thirdParameter = codeCopy[instructionIndex + 3]
-       
-       let first = firstParameterMode == 0 ? codeCopy[firstParameter] : firstParameter
-       let second = secondParameterMode == 0 ? codeCopy[secondParameter] : secondParameter
-        
-        let product = first * second
-        codeCopy[thirdParameter] = product
-        newIndex = instructionIndex + 4
-        break
-    case INPUT:
-        print("input pls")
-        let inp = readLine()
-        guard let input = inp, let inputNum = Int(input) else { break }
-        let dest = codeCopy[instructionIndex + 1]
-        codeCopy[dest] = inputNum
-        newIndex = instructionIndex + 2
-        break
-    case OUTPUT:
-        let firstParameter = codeCopy[instructionIndex + 1]
-        let first = firstParameterMode == 0 ? codeCopy[firstParameter] : firstParameter
-        print(first)
-        newIndex = instructionIndex + 2
-        break
-    default:
-        break
-    }
-    
-    if (instructionIndex < codeCopy.count - 1) {
-        codeCopy = runProgram(code: codeCopy, instructionIndex: newIndex)
-    }
-
-    return codeCopy
-}
-
-
-// Takes the last 2 digits
 func extractInstructionOpcode(_ input: Int) -> Int {
     return input % 100
 }
@@ -98,4 +24,120 @@ func extractInstructionParameterModes(_ input: Int) -> [Int] {
     return result
 }
 
-runProgram(code: input)
+let ADDITION = 1
+let MULTIPLICATION = 2
+
+let INPUT = 3
+let OUTPUT = 4
+
+let JUMP_IF_TRUE = 5
+let JUMP_IF_FALSE = 6
+let LESS_THAN = 7
+let EQUALS = 8
+
+@discardableResult
+func runProgram(code: [Int], instructionPointer: Int = 0) -> [Int] {
+    var codeCopy = code
+    
+    let instruction = extractInstructionOpcode(code[instructionPointer])
+    guard instruction != 99 else { return codeCopy }
+    
+    let parameterModes = extractInstructionParameterModes(code[instructionPointer])
+    
+    let firstParameterMode = parameterModes.count > 0 ? parameterModes[0] : 0
+    let secondParameterMode = parameterModes.count > 1 ? parameterModes[1] : 0
+    
+    let firstParameter = codeCopy[instructionPointer + 1]
+    let secondParameter = codeCopy[instructionPointer + 2]
+    let thirdParameter = codeCopy.count > instructionPointer + 2 ? codeCopy[instructionPointer + 3] : 0
+    
+    let firstValue = firstParameterMode == 0 ? codeCopy[firstParameter] : firstParameter
+    let secondValue = secondParameterMode == 0 && codeCopy.count > secondParameter ? codeCopy[secondParameter] : secondParameter
+    
+    var newInstructionPointer = 0
+    
+    switch instruction {
+    case ADDITION:
+        
+        let sum = firstValue + secondValue
+        codeCopy[thirdParameter] = sum
+        newInstructionPointer = instructionPointer + 4
+        
+        break
+    case MULTIPLICATION:
+        
+        let product = firstValue * secondValue
+        codeCopy[thirdParameter] = product
+        newInstructionPointer = instructionPointer + 4
+        
+        break
+    case INPUT:
+        
+        print("Provide input pls: ")
+        let line = readLine()
+        guard let input = line, let inputNumber = Int(input) else { break }
+        codeCopy[firstParameter] = inputNumber
+        newInstructionPointer = instructionPointer + 2
+        
+        break
+    case OUTPUT:
+        
+        print(firstValue)
+        newInstructionPointer = instructionPointer + 2
+        
+        break
+    case JUMP_IF_TRUE:
+        
+        if firstValue != 0 {
+            newInstructionPointer = secondValue
+        } else {
+            newInstructionPointer = instructionPointer + 3
+        }
+    
+        break
+    case JUMP_IF_FALSE:
+        
+        if firstValue == 0 {
+            newInstructionPointer = secondValue
+        } else {
+            newInstructionPointer = instructionPointer + 3
+        }
+
+        break
+    case LESS_THAN:
+        
+        if firstValue < secondValue {
+            codeCopy[thirdParameter] = 1
+        } else {
+            codeCopy[thirdParameter] = 0
+        }
+        
+        newInstructionPointer = instructionPointer + 4
+        
+        break
+    case EQUALS:
+        
+        if firstValue == secondValue     {
+            codeCopy[thirdParameter] = 1
+        } else {
+            codeCopy[thirdParameter] = 0
+        }
+        
+        newInstructionPointer = instructionPointer + 4
+        break
+    default:
+        break
+    }
+    
+    if (instructionPointer < codeCopy.count - 1) {
+        codeCopy = runProgram(code: codeCopy, instructionPointer: newInstructionPointer)
+    }
+    
+    return codeCopy
+}
+
+// Part one
+runProgram(code: input) // Input 1 and result should be 13818007
+
+// Part two
+runProgram(code: input) // Input 5 and result should be 3176266
