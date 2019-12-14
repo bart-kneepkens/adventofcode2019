@@ -31,123 +31,122 @@ let ADJUST_RELATIVE_BASE = 9
 
 let HALT = 99
 
-var relativeBase = 0
-
-@discardableResult
-func runProgram(_ program: [Int], instructionPointer: Int = 0, onInput: () -> Int, onOutput: (Int) -> Void) -> [Int] {
-    var mutableProgram = program
-    var newInstructionPointer = 0
+func runProgram(onInput: () -> Int, onOutput: (Int) -> Void) {
+    var program = input
+    var instructionPointer = 0
+    var relativeBase = 0
     
-    let instruction = extractInstructionOpcode(mutableProgram[instructionPointer])
-    guard instruction != HALT else { return mutableProgram }
-    
-    let parameterModes = extractInstructionParameterModes(mutableProgram[instructionPointer])
-    
-    func write(_ value: Int, at address: Int) {
-        if mutableProgram.count > address {
-            mutableProgram[address] = value
-            return
-        }
-        mutableProgram.append(contentsOf: [Int](repeating: 0, count: address - mutableProgram.count + 1))
-        mutableProgram[address] = value
-    }
-    
-    func read(_ address: Int) -> Int {
-        if mutableProgram.count > address {
-            return mutableProgram[address]
-        }
-        return 0
-    }
-    
-    func readParameter(_ index: Int) -> Int {
-        let rawParameter = mutableProgram[instructionPointer + index]
-        let mode = parameterModes.count > index - 1 ? parameterModes[index - 1] : 0
+    while instructionPointer < program.count - 1 {
+        let instruction = extractInstructionOpcode(program[instructionPointer])
+        guard instruction != HALT else { return }
         
-        if mode == 0 {
-            return mutableProgram[rawParameter]
-        } else if mode == 1 {
-            return rawParameter
+        let parameterModes = extractInstructionParameterModes(program[instructionPointer])
+        
+        func write(_ value: Int, at address: Int) {
+            if program.count > address {
+                program[address] = value
+                return
+            }
+            program.append(contentsOf: [Int](repeating: 0, count: address - program.count + 1))
+            program[address] = value
         }
         
-        return mutableProgram[rawParameter + relativeBase]
-    }
-    
-    func writeParameter(_ index: Int) -> Int {
-        let rawParameter = mutableProgram[instructionPointer + index]
-        let mode = parameterModes.count > index - 1 ? parameterModes[index - 1] : 0
-        
-        if mode == 0 || mode == 1 {
-            return rawParameter
+        func read(_ address: Int) -> Int {
+            if program.count > address {
+                return program[address]
+            }
+            return 0
         }
         
-        return rawParameter + relativeBase
-    }
-    
-    switch instruction {
-    case ADDITION:
-        let sum = readParameter(1) + readParameter(2)
-        write(sum, at: writeParameter(3))
-        newInstructionPointer = instructionPointer + 4
-        break
-    case MULTIPLICATION:
-        let product = readParameter(1) * readParameter(2)
-        write(product, at: writeParameter(3))
-        newInstructionPointer = instructionPointer + 4
-        break
-    case INPUT:
-        let value = onInput()
-        write(value, at: writeParameter(1))
-        newInstructionPointer = instructionPointer + 2
-        break
-    case OUTPUT:
-        onOutput(readParameter(1))
-        newInstructionPointer = instructionPointer + 2
-        break
-    case JUMP_IF_TRUE:
-        if readParameter(1) != 0 {
-            newInstructionPointer = readParameter(2)
-        } else {
-            newInstructionPointer = instructionPointer + 3
+        func readParameter(_ index: Int) -> Int {
+            let rawParameter = program[instructionPointer + index]
+            let mode = parameterModes.count > index - 1 ? parameterModes[index - 1] : 0
+            
+            if mode == 0 {
+                return program[rawParameter]
+            } else if mode == 1 {
+                return rawParameter
+            }
+            
+            return program[rawParameter + relativeBase]
         }
-        break
-    case JUMP_IF_FALSE:
-        if readParameter(1) == 0 {
-            newInstructionPointer = readParameter(2)
-        } else {
-            newInstructionPointer = instructionPointer + 3
+        
+        func writeParameter(_ index: Int) -> Int {
+            let rawParameter = program[instructionPointer + index]
+            let mode = parameterModes.count > index - 1 ? parameterModes[index - 1] : 0
+            
+            if mode == 0 || mode == 1 {
+                return rawParameter
+            }
+            
+            return rawParameter + relativeBase
         }
-        break
-    case LESS_THAN:
-        let value = readParameter(1) < readParameter(2) ? 1 : 0
-        write(value, at: writeParameter(3))
-        newInstructionPointer = instructionPointer + 4
-        break
-    case EQUALS:
-        let value = readParameter(1) == readParameter(2) ? 1 : 0
-        write(value, at: writeParameter(3))
-        newInstructionPointer = instructionPointer + 4
-        break
-    case ADJUST_RELATIVE_BASE:
-        relativeBase = relativeBase + readParameter(1)
-        newInstructionPointer = instructionPointer + 2
-        break
-    default:
-        break
+        
+        switch instruction {
+        case ADDITION:
+            let sum = readParameter(1) + readParameter(2)
+            write(sum, at: writeParameter(3))
+            instructionPointer = instructionPointer + 4
+            break
+        case MULTIPLICATION:
+            let product = readParameter(1) * readParameter(2)
+            write(product, at: writeParameter(3))
+            instructionPointer = instructionPointer + 4
+            break
+        case INPUT:
+            let value = onInput()
+            write(value, at: writeParameter(1))
+            instructionPointer = instructionPointer + 2
+            break
+        case OUTPUT:
+            onOutput(readParameter(1))
+            instructionPointer = instructionPointer + 2
+            break
+        case JUMP_IF_TRUE:
+            if readParameter(1) != 0 {
+                instructionPointer = readParameter(2)
+            } else {
+                instructionPointer = instructionPointer + 3
+            }
+            break
+        case JUMP_IF_FALSE:
+            if readParameter(1) == 0 {
+                instructionPointer = readParameter(2)
+            } else {
+                instructionPointer = instructionPointer + 3
+            }
+            break
+        case LESS_THAN:
+            let value = readParameter(1) < readParameter(2) ? 1 : 0
+            write(value, at: writeParameter(3))
+            instructionPointer = instructionPointer + 4
+            break
+        case EQUALS:
+            let value = readParameter(1) == readParameter(2) ? 1 : 0
+            write(value, at: writeParameter(3))
+            instructionPointer = instructionPointer + 4
+            break
+        case ADJUST_RELATIVE_BASE:
+            relativeBase = relativeBase + readParameter(1)
+            instructionPointer = instructionPointer + 2
+            break
+        default:
+            break
+        }
+        
     }
-    
-    if (instructionPointer < mutableProgram.count - 1) {
-        mutableProgram = runProgram(mutableProgram,
-                                    instructionPointer: newInstructionPointer,
-                                    onInput: onInput,
-                                    onOutput: onOutput)
-    }
-    
-    return mutableProgram
 }
 
-runProgram(input, onInput: { () -> Int in
+runProgram(onInput: { () -> Int in
     return 1
 }) { output in
     print(output)
     assert(output == 2457252183)
+}
+
+runProgram(onInput: { () -> Int in
+    return 2
+}) { output in
+    print(output)
+    assert(output == 70634)
 }
