@@ -1,33 +1,6 @@
 import Cocoa
 
-let input = "3,8,1001,8,10,8,105,1,0,0,21,42,51,76,93,110,191,272,353,434,99999,3,9,1002,9,2,9,1001,9,3,9,1002,9,3,9,1001,9,2,9,4,9,99,3,9,1002,9,3,9,4,9,99,3,9,1002,9,4,9,101,5,9,9,1002,9,3,9,1001,9,4,9,1002,9,5,9,4,9,99,3,9,1002,9,5,9,101,3,9,9,102,5,9,9,4,9,99,3,9,1002,9,5,9,101,5,9,9,1002,9,2,9,4,9,99,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,1,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,1,9,9,4,9,99,3,9,1001,9,1,9,4,9,3,9,1001,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,101,1,9,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,101,2,9,9,4,9,3,9,101,1,9,9,4,9,3,9,101,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1002,9,2,9,4,9,99,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,1001,9,1,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,1,9,4,9,99,3,9,1002,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,102,2,9,9,4,9,3,9,1001,9,2,9,4,9,3,9,102,2,9,9,4,9,3,9,1002,9,2,9,4,9,3,9,1001,9,1,9,4,9,3,9,101,2,9,9,4,9,3,9,101,1,9,9,4,9,3,9,102,2,9,9,4,9,99".components(separatedBy: ",").compactMap({ Int($0) })
-
-class BlockingQueue<Element> {
-    let dispatchQueue = DispatchQueue(label: "Queue")
-    let semaphore = DispatchSemaphore(value: 0)
-    
-    var buffer: [Element] = []
-    
-    init(_ element: Element) {
-        self.append(element)
-    }
-    
-    func append(_ element: Element) {
-        self.dispatchQueue.sync { buffer.append(element) }
-        
-        self.semaphore.signal()
-    }
-    
-    func removeFirst() -> Element {
-        self.semaphore.wait()
-        
-        var result: Element?
-        
-        self.dispatchQueue.sync { result = self.buffer.removeFirst() }
-        
-        return result!
-    }
-}
+let input = puzzleInput.components(separatedBy: ",").compactMap({ Int($0) })
 
 func extractInstructionOpcode(_ input: Int) -> Int {
     return input % 100
@@ -57,8 +30,12 @@ let JUMP_IF_FALSE = 6
 let LESS_THAN = 7
 let EQUALS = 8
 
+let ADJUST_RELATIVE_BASE = 9
+
+var relativeBase = 0
+
 @discardableResult
-func runProgram(code: [Int], instructionPointer: Int = 0, inputQueue: BlockingQueue<Int>, outputQueue: BlockingQueue<Int>) -> [Int] {
+func runProgram(code: [Int], instructionPointer: Int = 0, onInput: () -> Int, onOutput: (Int) -> Void) -> [Int] {
     var codeCopy = code
     
     let instruction = extractInstructionOpcode(code[instructionPointer])
@@ -66,67 +43,91 @@ func runProgram(code: [Int], instructionPointer: Int = 0, inputQueue: BlockingQu
     
     let parameterModes = extractInstructionParameterModes(code[instructionPointer])
     
-    let firstParameterMode = parameterModes.count > 0 ? parameterModes[0] : 0
-    let secondParameterMode = parameterModes.count > 1 ? parameterModes[1] : 0
+//    let firstParameterMode = parameterModes.count > 0 ? parameterModes[0] : 0
+//    let secondParameterMode = parameterModes.count > 1 ? parameterModes[1] : 0
+//    let thirdParameterMode = parameterModes.count > 2 ? parameterModes[2] : 0
     
-    let firstParameter = codeCopy[instructionPointer + 1]
-    let secondParameter = codeCopy[instructionPointer + 2]
-    let thirdParameter = codeCopy.count > instructionPointer + 3 ? codeCopy[instructionPointer + 3] : 0
+    func readParameter(_ index: Int) -> Int {
+        let rawParameter = codeCopy[instructionPointer + index]
+        let mode = parameterModes.count > index - 1 ? parameterModes[index - 1] : 0
+        
+        if mode == 0 {
+            return codeCopy[rawParameter]
+        } else if mode == 1 {
+            return rawParameter
+        }
+        
+        return codeCopy[rawParameter + relativeBase]
+    }
     
-    let firstValue = firstParameterMode == 0 ? codeCopy[firstParameter] : firstParameter
-    let secondValue = secondParameterMode == 0 && codeCopy.count > secondParameter ? codeCopy[secondParameter] : secondParameter
+    func writeParameter(_ index: Int) -> Int {
+        let rawParameter = codeCopy[instructionPointer + index]
+        let mode = parameterModes.count > index - 1 ? parameterModes[index - 1] : 0
+        
+        if mode == 0 || mode == 1 {
+            return rawParameter
+        }
+        
+        return rawParameter + relativeBase
+    }
+    
     
     var newInstructionPointer = 0
     
     switch instruction {
     case ADDITION:
-        let sum = firstValue + secondValue
-        codeCopy[thirdParameter] = sum
+        let sum = readParameter(1) + readParameter(2)
+        codeCopy[writeParameter(3)] = sum
         newInstructionPointer = instructionPointer + 4
         break
     case MULTIPLICATION:
-        let product = firstValue * secondValue
-        codeCopy[thirdParameter] = product
+        let product = readParameter(1) * readParameter(2)
+        codeCopy[writeParameter(3)] = product
         newInstructionPointer = instructionPointer + 4
         break
     case INPUT:
-        let value = inputQueue.removeFirst()
-        codeCopy[firstParameter] = value
+        print("input please")
+        let value = onInput()
+        codeCopy[writeParameter(1)] = value
         newInstructionPointer = instructionPointer + 2
         break
     case OUTPUT:
-        outputQueue.append(firstValue)
+        onOutput(readParameter(1))
         newInstructionPointer = instructionPointer + 2
         break
     case JUMP_IF_TRUE:
-        if firstValue != 0 {
-            newInstructionPointer = secondValue
+        if readParameter(1) != 0 {
+            newInstructionPointer = readParameter(2)
         } else {
             newInstructionPointer = instructionPointer + 3
         }
         break
     case JUMP_IF_FALSE:
-        if firstValue == 0 {
-            newInstructionPointer = secondValue
+        if readParameter(1) == 0 {
+            newInstructionPointer = readParameter(2)
         } else {
             newInstructionPointer = instructionPointer + 3
         }
         break
     case LESS_THAN:
-        if firstValue < secondValue {
-            codeCopy[thirdParameter] = 1
+        if readParameter(1) < readParameter(2) {
+            codeCopy[writeParameter(3)] = 1
         } else {
-            codeCopy[thirdParameter] = 0
+            codeCopy[writeParameter(3)] = 0
         }
         newInstructionPointer = instructionPointer + 4
         break
     case EQUALS:
-        if firstValue == secondValue     {
-            codeCopy[thirdParameter] = 1
+        if readParameter(1) == readParameter(2) {
+            codeCopy[writeParameter(3)] = 1
         } else {
-            codeCopy[thirdParameter] = 0
+            codeCopy[writeParameter(3)] = 0
         }
         newInstructionPointer = instructionPointer + 4
+        break
+    case ADJUST_RELATIVE_BASE:
+        relativeBase = relativeBase + readParameter(1)
+        newInstructionPointer = instructionPointer + 2
         break
     default:
         break
@@ -135,65 +136,22 @@ func runProgram(code: [Int], instructionPointer: Int = 0, inputQueue: BlockingQu
     if (instructionPointer < codeCopy.count - 1) {
         codeCopy = runProgram(code: codeCopy,
                               instructionPointer: newInstructionPointer,
-                              inputQueue: inputQueue,
-                              outputQueue: outputQueue)
+                              onInput: onInput,
+                              onOutput: onOutput)
     }
     
     return codeCopy
 }
 
-// This is very embarrassing please don't look
-// I know I should implement a better algorithm such as Heap's, but I'm lagging behind on my calendar
-func findAllUniqueCombinationsWithPossibleSettings(_ possibleSettings: Set<Int>) -> Set<[Int]> {
-    var uniqueCombinations: Set<[Int]> = Set()
-    
-    for firstSetting in possibleSettings {
-        var p2 = possibleSettings
-        p2.remove(firstSetting)
-        
-        for secondSetting in p2 {
-            var p3 = p2
-            p3.remove(secondSetting)
-            
-            for thirdSetting in p3 {
-                var p4 = p3
-                p4.remove(thirdSetting)
-                
-                for fourthSetting in p4 {
-                    var p5 = p4
-                    p5.remove(fourthSetting)
-                    
-                    for fifthSetting in p5 {
-                        uniqueCombinations.insert([firstSetting, secondSetting, thirdSetting, fourthSetting, fifthSetting])
-                    }
-                }
-            }
-        }
-    }
-    
-    return uniqueCombinations
+
+var program = input
+program.append(contentsOf: [Int](repeating: 0, count: 1024*1024))
+
+runProgram(code: program, onInput: { () -> Int in
+    let val = readLine()
+    return Int(val!) ?? 0
+}) { output in
+    print(output)
 }
 
-func runCombinationWithFeedbackLoop(combination: [Int]) -> Int {
-    let queues = combination.map { BlockingQueue<Int>($0) }
-    
-    queues.first!.append(0)
-    
-    for amp in 0..<4 {
-        let dispatch = DispatchQueue(label: "\(amp)")
-        
-        dispatch.async {
-            runProgram(code: input, inputQueue: queues[amp], outputQueue: queues[amp + 1])
-        }
-    }
-    
-    runProgram(code: input, inputQueue: queues[4], outputQueue: queues[0])
-    
-    return queues[0].removeFirst()
-}
-
-//let part2Answer = findAllUniqueCombinationsWithPossibleSettings(Set([5, 6, 7, 8, 9]))
-//                    .map({ runCombinationWithFeedbackLoop(combination: $0) })
-//                    .max()
-//
-//print(part2Answer!)
+//2457252183
