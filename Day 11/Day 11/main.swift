@@ -221,23 +221,52 @@ func newHeading(_ heading: Heading, _ direction: Direction) -> Heading {
     }
 }
 
-func runRobot() {
-    let inputQueue = BlockingQueue(0)
-    var map = [Coordinate: Color]()
+typealias Map = [Coordinate: Color]
+
+func printMap(_ map: Map, _ position: Coordinate) {
+    let minX = map.keys.min(by: { $0.x < $1.x })!.x
+    let maxX = map.keys.max(by: { $0.x < $1.x })!.x
+    
+    let minY = map.keys.min(by: { $0.y < $1.y })!.y
+    let maxY = map.keys.max(by: { $0.y < $1.y })!.y
+    
+    let lineLength = maxX - minX + 1
+    let lines = maxY - minY + 1
+    
+    let emptyRow = [String](repeating: ".", count: lineLength)
+    var result = [[String]](repeating: emptyRow, count: lines)
+    
+    for y in 0..<lines {
+        for x in 0..<lineLength {
+            let char = (map[Coordinate(x, -y)] == Color.white) ? "⬜️" : "⬛️"
+            result[y][x] = char
+        }
+    }
+    
+    for row in result {
+        print(row.joined())
+    }
+}
+
+func runRobot(_ initialCameraValue: Int = 0) -> Map {
+    let inputQueue = BlockingQueue<Int>(initialCameraValue)
+    var map = Map()
     var currentHeading = Heading.north
     
     var position = Coordinate(0,0)
     
     func paint(_ color: Color) {
         map[position] = color
-
+        print("painting", color, position)
     }
     
     func turn(_ direction: Direction) {
         currentHeading = newHeading(currentHeading, direction)
+        print("turning", direction)
     }
     
     func move() {
+        print("moving")
         var newCoordinate = position
         
         switch currentHeading {
@@ -271,9 +300,23 @@ func runRobot() {
                 inputQueue.append(Color.black.rawValue)
             }
         }
+//        print("------")
+//        printMap(map, position)
     }
     
-    print(map.count)
+//    print(map.count) // 2428
+    
+    return map
 }
 
-runRobot()
+//runRobot()
+
+
+// part 2
+
+let map = runRobot(Color.white.rawValue)
+
+printMap(map, Coordinate(0,0))
+
+
+
