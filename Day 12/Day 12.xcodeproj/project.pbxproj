@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		34D96FF223AD81D800D7766D /* Math.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D96FF123AD81D800D7766D /* Math.swift */; };
 		AE3B3E8523AC0B8700EAD20E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3B3E8423AC0B8700EAD20E /* main.swift */; };
 		AE3B3E8C23AC213500EAD20E /* Coordinate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3B3E8B23AC213500EAD20E /* Coordinate.swift */; };
 		AE3B3E8E23AC216400EAD20E /* Moon.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3B3E8D23AC216400EAD20E /* Moon.swift */; };
@@ -25,6 +26,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		34D96FF123AD81D800D7766D /* Math.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Math.swift; sourceTree = "<group>"; };
 		AE3B3E8123AC0B8700EAD20E /* Day 12 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Day 12"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE3B3E8423AC0B8700EAD20E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		AE3B3E8B23AC213500EAD20E /* Coordinate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Coordinate.swift; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 				AE3B3E8423AC0B8700EAD20E /* main.swift */,
 				AE3B3E8B23AC213500EAD20E /* Coordinate.swift */,
 				AE3B3E8D23AC216400EAD20E /* Moon.swift */,
+				34D96FF123AD81D800D7766D /* Math.swift */,
 			);
 			path = "Day 12";
 			sourceTree = "<group>";
@@ -129,6 +132,7 @@
 				AE3B3E8523AC0B8700EAD20E /* main.swift in Sources */,
 				AE3B3E8E23AC216400EAD20E /* Moon.swift in Sources */,
 				AE3B3E8C23AC213500EAD20E /* Coordinate.swift in Sources */,
+				34D96FF223AD81D800D7766D /* Math.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,7 +256,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = GY3SL5N58H;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -263,7 +267,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = GY3SL5N58H;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

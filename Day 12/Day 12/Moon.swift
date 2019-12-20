@@ -1,3 +1,8 @@
+
+enum Axis {
+    case x, y, z
+}
+
 class Moon {
     var position: Coordinate
     var velocity: Coordinate
@@ -7,14 +12,18 @@ class Moon {
         self.velocity = Coordinate(0,0,0)
     }
     
-    func applyGravity(_ otherMoon: Moon) {
+    func applyGravity(_ otherMoon: Moon, _ axis: Axis) {
         let otherPosition = otherMoon.position
-        let xmod = gravityModifier(self.position.x, otherPosition.x)
-        let ymod = gravityModifier(self.position.y, otherPosition.y)
-        let zmod = gravityModifier(self.position.z, otherPosition.z)
         
-        let v = Coordinate(xmod, ymod, zmod)
-        self.velocity = self.velocity + v
+        var modifier: Coordinate = Coordinate(0, 0, 0)
+        
+        switch axis {
+        case .x: modifier.x = gravityModifier(self.position.x, otherPosition.x)
+        case .y: modifier.y = gravityModifier(self.position.y, otherPosition.y)
+        case .z: modifier.z = gravityModifier(self.position.z, otherPosition.z)
+        }
+        
+        self.velocity = self.velocity + modifier
     }
     
     func applyVelocity() {
