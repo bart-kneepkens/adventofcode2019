@@ -300,17 +300,9 @@ func runRobot(_ initialCameraValue: Int = 0) -> Map {
                 inputQueue.append(Color.black.rawValue)
             }
         }
-//        print("------")
-//        printMap(map, position)
     }
-    
-//    print(map.count) // 2428
-    
     return map
 }
-
-//runRobot()
-
 
 // part 2
 
