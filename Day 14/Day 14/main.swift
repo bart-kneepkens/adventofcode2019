@@ -92,6 +92,11 @@ func generate(_ chemical: Chemical) -> Bool {
     return true
 }
 
+func setOREQuantity(_ quantity: Int) {
+    consumed = [:]
+    stash.chemicals = ["ORE": quantity]
+}
+
 // Parse inputs
 reactions = puzzleInput.components(separatedBy: .newlines).map { line -> Reaction in
     let components = line.components(separatedBy: "=>")
@@ -108,3 +113,25 @@ reactions = puzzleInput.components(separatedBy: .newlines).map { line -> Reactio
 // Part 1
 generate(Chemical(1, "FUEL"))
 assert(consumed["ORE"]! == 278404) // 278404
+
+// Part 2
+let ONE_TRILLION = 1000000000000
+var minORE = 0
+var maxORE = ONE_TRILLION
+var mostGeneratedFuel = 0
+
+while minORE != maxORE {
+    setOREQuantity(ONE_TRILLION)
+    
+    let currentQuantity = (minORE + maxORE) / 2
+    let generatedFuelSuccesfully = generate(Chemical(currentQuantity, "FUEL"))
+    
+    if generatedFuelSuccesfully {
+        mostGeneratedFuel = currentQuantity
+        minORE = currentQuantity + 1
+        continue
+    }
+    maxORE = currentQuantity
+}
+
+assert(mostGeneratedFuel == 4436981)
