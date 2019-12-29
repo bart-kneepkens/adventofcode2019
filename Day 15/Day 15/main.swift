@@ -179,7 +179,7 @@ let HAS_MOVED_HIT_OXYGEN_SYSTEM = 2
 
 let allMoves: [Move] = [.north, .south, .west, .east]
 
-func findPathToOxygen() -> [Move] {
+func findPathToOxygen() -> (path: [Move], map: [Coordinate: Tile]) {
     var path = [(coordinate: Coordinate, move: Move)]()
     var position = Coordinate(0,0)
     var nextMove: Move = .west
@@ -210,9 +210,9 @@ func findPathToOxygen() -> [Move] {
             map[previousPosition] = .empty
             
             let lastPosition = path.last?.coordinate
+            
             if lastPosition == position {
-                // backtracked, so pop it off the path
-                path.removeLast()
+                path.removeLast() // No steps taken == no steps possible == dead end
             } else {
                 path.append((previousPosition, nextMove))
             }
@@ -229,10 +229,35 @@ func findPathToOxygen() -> [Move] {
         return false
     })
     
-    return path.map({ $0.move })
+    return (path.map({ $0.move }), map)
 }
 
 
 // Part 1
-let resultMovePath = findPathToOxygen()
-print(resultMovePath.count == 304)
+let resultMovePath = findPathToOxygen().path
+assert(resultMovePath.count == 304)
+
+// Part 2
+
+var map = findPathToOxygen().map
+var oxygenEverywhere = false
+var minutes = 0
+
+while !oxygenEverywhere {
+    // fill all empty spaces with the holy oxygen
+    let existingOxygenLocations = map.filter({ $0.value == .oxygen })
+    existingOxygenLocations.forEach { location in
+        let neighboringLocations = allMoves.map({ location.key.moved($0) })
+        neighboringLocations.forEach { coordinate in
+            if map[coordinate] == .empty {
+                map[coordinate] = .oxygen
+            }
+        }
+        
+    }
+    minutes += 1
+    
+    oxygenEverywhere = map.filter({ $0.value == .empty }).count == 0
+}
+
+assert(minutes == 310)
